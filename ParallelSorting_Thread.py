@@ -1,16 +1,3 @@
-#!/usr/bin/env python3
-"""
-Part 1: Parallel Sorting (threaded version)
-
-- Splits the array into `workers` chunks.
-- Each mapper thread sorts its chunk (using Python's sort).
-- Each mapper pushes the sorted chunk onto a Queue.
-- Reducer runs in the main thread: collects all sorted chunks and merges
-  them using heapq.merge into a final sorted list.
-
-Usage:
-  python3 part1_thread.py --workers 4 --size 131072
-"""
 from typing import List
 import argparse
 import random
@@ -73,7 +60,7 @@ def run_threaded_sort(size: int, workers: int):
     end = time.perf_counter()
     mem_after = measure_memory()
 
-    # Correctness
+    # Print out the stats of its correctness
     correct = merged == sorted(data)
 
     print(f"Threaded sort: size={size} workers={workers}")
@@ -90,6 +77,7 @@ def run_threaded_sort(size: int, workers: int):
     print()
 
 def main():
+    # Choose the number of workers and size you want
     parser = argparse.ArgumentParser()
     parser.add_argument("--workers", type=int, default=4, help="Number of mapper workers")
     parser.add_argument("--size", type=int, default=131072, help="Total input size")
