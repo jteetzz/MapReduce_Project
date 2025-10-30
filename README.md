@@ -2,7 +2,7 @@
 
 ## Overview
 This project implements **two MapReduce-style tasks** designed to explore **parallelism**, **inter-process communication (IPC)**, and **synchronization** in operating systems.  
-You will use both **multithreading** and **multiprocessing** to simulate the MapReduce model on a single machine.
+I used both **multithreading** and **multiprocessing** to simulate the MapReduce model on a single machine.
 
 The project is divided into:
 1. **Parallel Sorting (MapReduce Style)**
@@ -28,8 +28,8 @@ MapReduce_Project/
 │
 ├── ParallelSorting_Thread.py     # Multithreaded MapReduce-style sorting
 ├── MaxValue_Thread.py            # Thread-based max-value aggregation
-├── MaxValue_Process.py           # Process-based max-value aggregation
-└── README.md                     # Project documentation (this file)
+├── ParallelSorting_Process.py           # Process-based max-value aggregation
+└── README.md                     # Project documentation 
 ```
 
 ---
@@ -83,8 +83,9 @@ MapReduce_Project/
 2. **Choose the Script**
    - In the Project pane, open one of the files:
      - `ParallelSorting_Thread.py`
+     - `ParallelSorting_Process.py`
      - `MaxValue_Thread.py`
-     - `MaxValue_Process.py`
+     
 
 3. **Set Up the Run Configuration**
    - Right-click the file and choose **Run '<filename>'**.
@@ -118,18 +119,6 @@ python ParallelSorting_Thread.py
 python MaxValue_Thread.py
 ```
 
-#### 3. Max-Value Aggregation (Processes)
-```bash
-python MaxValue_Process.py
-```
-
-If any code accepts command-line arguments (like number of workers or input size), they can be passed as:
-```bash
-python MaxValue_Thread.py 8
-```
-
----
-
 ##  Example Output
 
 ###  Parallel Sorting Example
@@ -147,7 +136,71 @@ Global max found: 999999
 Total execution time: 0.008s
 
 ```
-## 🧾 References
+
+## Diagrams 
+Multithreading: 
++-----------------------------------------------------------+
+|                    Main Thread (Coordinator)              |
+|-----------------------------------------------------------|
+| 1. Splits input data into chunks                          |
+| 2. Spawns worker threads (Map Phase)                      |
+| 3. Waits for threads to finish sorting/aggregation         |
+| 4. Launches reducer thread to merge or finalize results    |
++-----------------------------------------------------------+
+                 |          |          |          |
+                 v          v          v          v
+        +-----------+ +-----------+ +-----------+ +-----------+
+        | MapThread1| | MapThread2| | MapThread3| | MapThread4|
+        +-----------+ +-----------+ +-----------+ +-----------+
+                 \         |          |          /
+                  \        |          |         /
+                   \_______|__________|________/
+                            IPC via
+                   Shared Variables / Queues
+                              ↓
+                   +---------------------------+
+                   |       Reducer Thread      |
+                   |  - Merges sorted chunks   |
+                   |  - Or computes global max |
+                   +---------------------------+
+Multi-processing:
++-----------------------------------------------------------+
+|                 Main Process (Coordinator)                |
+|-----------------------------------------------------------|
+| - Generates random input data                            |
+| - Splits data into chunks                                 |
+| - Creates N worker processes (Map phase)                  |
+| - Collects sorted chunks from Queue                       |
+| - Merges sorted chunks using heapq.merge() (Reduce phase) |
++-----------------------------------------------------------+
+                 |            |            |            |
+                 v            v            v            v
+        +-------------+ +-------------+ +-------------+ +-------------+
+        |  Worker 1   | |  Worker 2   | |  Worker 3   | |  Worker 4   |
+        |-------------| |-------------| |-------------| |-------------|
+        | Sorts its   | | Sorts its   | | Sorts its   | | Sorts its   |
+        | data slice  | | data slice  | | data slice  | | data slice  |
+        | using       | | using       | | using       | | using       |
+        | sorted()    | | sorted()    | | sorted()    | | sorted()    |
+        +------+------+ +------+------+ +------+------+ +------+
+               |                |                |             |
+               +----------------+----------------+-------------+
+                                |
+                      Inter-Process Communication
+                          via `multiprocessing.Queue`
+                                |
+                                v
+                    +-------------------------------+
+                    |        Reducer Stage           |
+                    |-------------------------------|
+                    | - Collects sorted slices      |
+                    | - Merges all chunks with       |
+                    |   heapq.merge()                |
+                    | - Produces final sorted array  |
+                    +-------------------------------+
+
+
+##  References
 - Dean, J., & Ghemawat, S. (2008). *MapReduce: Simplified Data Processing on Large Clusters.*
 - Python Documentation:
   - [`threading`](https://docs.python.org/3/library/threading.html)
