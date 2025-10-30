@@ -1,38 +1,156 @@
-# MapReduce-style Parallel Sorting and Max Aggregation (Single-host)
+# MapReduce Systems for Parallel Sorting and Max-Value Aggregation with Constrained Memory
 
-This repository contains an instructional implementation of two MapReduce-style tasks, implemented both with multithreading and multiprocessing on a single host:
+## Overview
+This project implements **two MapReduce-style tasks** designed to explore **parallelism**, **inter-process communication (IPC)**, and **synchronization** in operating systems.  
+You will use both **multithreading** and **multiprocessing** to simulate the MapReduce model on a single machine.
 
-- Part 1 — Parallel Sorting (MapReduce style)
-  - Threaded implementation: `part1_thread.py`
-  - Process-based implementation: `part1_process.py`
-- Part 2 — Max-Value Aggregation with constrained shared memory (one-integer buffer)
-  - Threaded implementation: `part2_thread.py`
-  - Process-based implementation: `part2_process.py`
+The project is divided into:
+1. **Parallel Sorting (MapReduce Style)**
+2. **Max-Value Aggregation with Constrained Shared Memory**
 
-Goals:
-- Practice process and thread creation and management
-- Practice IPC (queues/shared memory) and synchronization (locks)
-- Measure execution time and memory usage with different worker counts (1, 2, 4, 8)
-- Demonstrate correctness for small inputs and performance for larger inputs
+---
 
-Requirements
-- Python 3.8+
-- Optional: `psutil` for more accurate memory measurements (pip install psutil)
+## MapReduce
+**MapReduce** is a programming model that allows large-scale data processing across distributed clusters by splitting work into two main stages:
 
-Quick usage
-- Run Part 1 (sorting) with threads:
-  python3 part1_thread.py --workers 4 --size 131072
-- Run Part 1 (sorting) with processes:
-  python3 part1_process.py --workers 4 --size 131072
-- Run Part 2 (max) with threads (synchronized):
-  python3 part2_thread.py --workers 8 --size 131072 --sync
-- Run Part 2 (max) with processes (unsynchronized — shows race conditions):
-  python3 part2_process.py --workers 8 --size 131072 --nosync
+- **Map** – Each worker processes a portion of the input data and emits intermediate results.  
+- **Reduce** – The intermediate results are aggregated into final output.
 
-Each script prints:
-- timing for map phase (sorting/local max)
-- time for reduce phase (merge / read final value)
-- memory usage (approx.) for the parent process
-- correctness checks (compares to Python built-ins)
+This project **simulates MapReduce locally** (not distributed) using:
+- Multithreading or multiprocessing for worker execution.
+- Shared memory or message passing for communication.
 
-See `report.md` for a minimal project report with diagrams, implementation notes, and sample results.
+---
+
+## Project Structure
+```
+MapReduce_Project/
+│
+├── ParallelSorting_Thread.py     # Multithreaded MapReduce-style sorting
+├── MaxValue_Thread.py            # Thread-based max-value aggregation
+├── MaxValue_Process.py           # Process-based max-value aggregation
+└── README.md                     # Project documentation (this file)
+```
+
+---
+
+## Part 1: Parallel Sorting (MapReduce Style)
+
+###  Description
+**Goal:** Sort a large array of integers in parallel using threads.
+
+**Process:**
+1. **Map Phase:** Divide the input array into equal chunks.
+2. Each worker thread sorts its chunk using Merge Sort or Quick Sort.
+3. **Reduce Phase:** A reducer thread merges all sorted chunks into one final sorted array.
+
+###  Requirements
+- Implemented using **multithreading**.
+- Use shared data structures or queues to pass results between threads.
+- Measure **execution time** and **memory usage** for 1, 2, 4, and 8 workers.
+
+---
+
+##  Part 2: Max-Value Aggregation with Constrained Shared Memory
+
+###  Description
+**Goal:** Compute the **global maximum** value using limited shared memory — only **one integer**.
+
+**Process:**
+1. **Map Phase:** Each worker computes the local maximum of its data chunk.
+2. **Reduce Phase:** Workers compete to update a shared global maximum buffer.
+3. Synchronization (locks/semaphores) ensures correctness.
+
+###  Requirements
+- Shared memory region must store **only one integer**.
+- Proper synchronization to prevent race conditions.
+- Measure runtime for 1, 2, 4, and 8 workers.
+
+###  Implementations
+- **`MaxValue_Thread.py`** — Uses threads and `threading.Lock`.
+- **`MaxValue_Process.py`** — Uses processes and `multiprocessing.Value`.
+
+---
+
+##  How to Run the Project
+
+###  Option 1 — Run in **PyCharm (Recommended)**
+1. **Open the Project**
+   - Launch PyCharm.
+   - Click "Clone Repository" and paste the git URL.
+   - The GitHub will then be loaded onto the interpreter.
+
+2. **Choose the Script**
+   - In the Project pane, open one of the files:
+     - `ParallelSorting_Thread.py`
+     - `MaxValue_Thread.py`
+     - `MaxValue_Process.py`
+
+3. **Set Up the Run Configuration**
+   - Right-click the file and choose **Run '<filename>'**.
+   - PyCharm will automatically create a run configuration for that code.
+
+4. **View Output**
+   - The program will run in the **Run Console** at the bottom.
+   - You’ll see printed logs showing progress, execution time, and final output (sorted array or max value).
+
+5. *(Optional)* — Adjust Inputs
+   - The codes allow editing variables like array size or worker count directly at the bottom.
+
+---
+
+### Option 2 — Run from the **Command Line**
+Open a terminal (inside PyCharm or your system terminal), navigate to the project directory, and run:
+
+```bash
+cd MapReduce_Project
+```
+
+Then execute one of the codes:
+
+#### 1. Parallel Sorting (Threads)
+```bash
+python ParallelSorting_Thread.py
+```
+
+#### 2. Max-Value Aggregation (Threads)
+```bash
+python MaxValue_Thread.py
+```
+
+#### 3. Max-Value Aggregation (Processes)
+```bash
+python MaxValue_Process.py
+```
+
+If any code accepts command-line arguments (like number of workers or input size), they can be passed as:
+```bash
+python MaxValue_Thread.py 8
+```
+
+---
+
+##  Example Output
+
+###  Parallel Sorting Example
+```
+Running parallel sort with 4 threads...
+Map phase completed in 0.034s
+Reduce phase completed in 0.012s
+Total time: 0.046s
+```
+
+###  Max-Value Aggregation Example
+```
+Starting with 8 worker threads...
+Global max found: 999999
+Total execution time: 0.008s
+
+```
+## 🧾 References
+- Dean, J., & Ghemawat, S. (2008). *MapReduce: Simplified Data Processing on Large Clusters.*
+- Python Documentation:
+  - [`threading`](https://docs.python.org/3/library/threading.html)
+  - [`multiprocessing`](https://docs.python.org/3/library/multiprocessing.html)
+  - [`time`](https://docs.python.org/3/library/time.html)
+  - [`random`](https://docs.python.org/3/library/random.html)
